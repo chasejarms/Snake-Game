@@ -1,7 +1,7 @@
 var snake = [
-    {x: 0, y: 0, color: "blue"},
+    {x: 2, y: 0, color: "blue"},
     {x: 1, y: 0, color: "blue"},
-    {x: 2, y: 0, color: "blue"}
+    {x: 0, y: 0, color: "blue"}
 ];
 
 $(document).ready(function() {
@@ -24,6 +24,7 @@ $(document).ready(function() {
     var beginTime = 200;
     var clearMove = true;
     var snakeMove = 'notYet';
+    var prevDir = 'noDirection';
 
     //sets up the canvas for the first time
     ctx.fillStyle = 'white';
@@ -84,26 +85,40 @@ $(document).ready(function() {
 
     //changes the global direction variable
     $(document).keydown(function(e) {
+        prevDir = direction; //important for the snake slither motion
         var key = e.which;
         switch (key) {
             case 37:
-                direction = 'left';
-                break;
-            case 39:
-                direction = 'right';
-                break;
-            case 38:
-                direction = 'up';
-                break;
-            case 40:
-                direction = 'down';
-                break;
-            case 32:
+                direction = start === null ? 'right' : prevDir === 'right' ? 'right' : 'left';
                 if (snakeMove === 'notYet') {
                     setTime(currentLevel, beginLevel, beginTime);
                     snakeMove = setInterval(moveSnake, time);
+                    start = true;
                 }
-                start = true;
+                break;
+            case 39:
+                direction = prevDir === 'left' ? 'left' : 'right';
+                if (snakeMove === 'notYet') {
+                    setTime(currentLevel, beginLevel, beginTime);
+                    snakeMove = setInterval(moveSnake, time);
+                    start = true;
+                }
+                break;
+            case 38:
+                direction = start === null ? 'right' : prevDir === 'down' ? 'down' : 'up';
+                if (snakeMove === 'notYet') {
+                    setTime(currentLevel, beginLevel, beginTime);
+                    snakeMove = setInterval(moveSnake, time);
+                    start = true;
+                }
+                break;
+            case 40:
+                direction = start === null ? 'right' : prevDir === 'up' ? 'up' : 'down';
+                if (snakeMove === 'notYet') {
+                    setTime(currentLevel, beginLevel, beginTime);
+                    snakeMove = setInterval(moveSnake, time);
+                    start = true;
+                }
                 break;
             default:
                 break;
@@ -112,31 +127,46 @@ $(document).ready(function() {
 
     function moveSnake() {
         if (direction === 'right') {
-            repositionSnake('x', 'plus');
+            snakeSlither('right');
         }
         else if (direction === 'left') {
-            repositionSnake('x', 'minus');
+            snakeSlither('left');
         }
         else if (direction === 'up') {
-            repositionSnake('y', 'minus');
+            snakeSlither('up');
         }
         else {
-            repositionSnake('y', 'plus');
+            snakeSlither('down');
         }
-        console.log(snake);
+        console.log(direction);
         resetCanvas();
         paintArray(snake);
         paintArray(myFood);
     }
-    function repositionSnake(xOrY, plusOrMinus) {
+
+    //this function makes the snake-like movement to create the slither motion
+    function snakeSlither(dir) {
         var snakeLength = snake.length;
-        for (var x=0; x < snakeLength; x++) {
-            console.log(snake);
-            plusOrMinus === 'plus' ? snake[x][xOrY]++ : snake[x][xOrY]--;
+        var firstPiece = snake[0];
+        if (dir === 'right') {
+            snake.unshift({x: firstPiece.x + 1, y: firstPiece.y, color: firstPiece.color});
+            snake.pop();
+        }
+        else if (dir === 'left') {
+            snake.unshift({x: firstPiece.x - 1, y: firstPiece.y, color: firstPiece.color});
+            snake.pop();
+        }
+        else if (dir === 'up') {
+            snake.unshift({x: firstPiece.x, y: firstPiece.y - 1, color: firstPiece.color});
+            snake.pop();
+        }
+        else {
+            snake.unshift({x: firstPiece.x, y: firstPiece.y + 1, color: firstPiece.color});
+            snake.pop();
         }
         checkForOffBoard("snake");
+        console.log(snake);
     }
-
     function checkForOffBoard(arr) {
         var snakeVar = window[arr];
         var snakeLength = snakeVar.length;
