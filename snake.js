@@ -1,22 +1,37 @@
+var snake = [
+    {x: 0, y: 0, color: "blue"},
+    {x: 1, y: 0, color: "blue"},
+    {x: 2, y: 0, color: "blue"}
+];
 
 $(document).ready(function() {
+    //use these variables to adjust the canvas (particularly ctx)
     var canvas = $("#canvas")[0];
     var ctx = canvas.getContext("2d");
     var w = $("#canvas").width();
     var h = $('#canvas').height();
 
+    //adjusting the cell width will change the page accordingly. Everything else is dynamic so only touch cellWidth
     var cellWidth = 15;
     var maxWidth = w/cellWidth - 1;
     var maxHeight = w/cellWidth - 1;
     var direction = 'noDirection';
     var score = 0;
+    var highScore = 0;
+    var start = null;
+    var currentLevel = 1;
+    var beginLevel = 1;
+    var beginTime = 200;
+    var clearMove = true;
+    var snakeMove = 'notYet';
 
-    var colorsArr = ["blue", "green", "red", "yellow", "orange"];
-
+    //sets up the canvas for the first time
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = "black";
     ctx.strokeRect(0,0,w,h);
+
+    //the food will be a random color each time
     function randomColor() {
         var letters = "0123456789ABCDEF";
         var color = "#";
@@ -25,70 +40,45 @@ $(document).ready(function() {
         }
         return color;
     }
+
+    //creates random number (put in a parameter if the limit doesn't apply to the board width/height)
     function randomNumber(optionalLimit) {
         var limit = optionalLimit ? optionalLimit : maxWidth;
         var number = Math.round(Math.random() * limit);
         return number;
     }
-    function createFoodOrCatcher(foodVar, x, y) {
+
+    //creates the initial snake and associated food
+    function createBlock(foodVar, x, y) {
         var square = {
             x: x !== false ? x : randomNumber(),
             y: y !== false ? y : randomNumber(),
-            color: colorsArr[randomNumber(colorsArr.length - 1)]
+            color: randomColor()
         };
         foodVar[0] = square;
         return foodVar;
     }
-    function paintSquare(arr) {
+
+    //uses an array of objects and paints each object in the array on to the canvas
+    function paintArray(arr) {
         arr.forEach(function(obj) {
             ctx.fillStyle = obj.color;
             ctx.fillRect(obj.x*cellWidth, obj.y*cellWidth, cellWidth, cellWidth);
         })
     }
-    //setInterval(paintSquare, 1);
-    var myCatcher = [];
+
+    //arrays containing the food item array and the snake array
     var myFood = [];
 
-    //sets up those variables
+    paintArray(snake);
+    paintArray(createBlock(myFood, false, false));
 
-    paintSquare(createFoodOrCatcher(myCatcher, 0, maxHeight));
-    paintSquare(createFoodOrCatcher(myFood, false, 0));
-
-    //food will change y position every 50 miliseconds
-    setInterval(rainFood, 50);
-
-    //changes y position and checks to see if food should become a part of catcher
-    function rainFood() {
-        //checks to see if the catcher catches the food
-        var lastOne = myCatcher.length - 1;
-        if ((myCatcher[lastOne].x === myFood[0].x) && (myCatcher[lastOne].y - 1 === myFood[0].y)) {
-            myCatcher.push(myFood[0]);
-            myFood = [];
-            createFoodOrCatcher(myFood, false, 0);
-            inARow(3, myCatcher);
-            paintSquare(myFood);
-            return;
-        }
-        resetCanvas();
-        paintSquare(myCatcher);
-        if(myFood[0].y > maxHeight - 1) {
-            createFoodOrCatcher(myFood, false, 0);
-            paintSquare(myFood);
-            return;
-        }
-        //makes the food rain everytime
-        myFood.forEach(function(obj) {
-            obj.y++;
-        });
-        paintSquare(myFood);
-    }
-    //resets the canvas
+    //resets the canvas each time to so that things can appear to move
     function resetCanvas() {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, w, h);
         ctx.strokeStyle = 'black';
         ctx.strokeRect(0,0, w, h);
-
         numberPaint();
     }
 
@@ -102,73 +92,72 @@ $(document).ready(function() {
             case 39:
                 direction = 'right';
                 break;
-            case 32:
-                if (myCatcher[0].x === maxWidth || direction === 'fastRight') {
-                    direction = 'fastLeft';
-                }
-                else if (myCatcher[0].x === 0 || direction === 'fastLeft') {
-                    direction = 'fastRight';
-                }
-                else if (myCatcher[0].x > maxWidth/2) {
-                    direction = 'fastLeft';
-                }
-                else {
-                    direction = 'fastRight';
-                }
-                break;
             case 38:
-                direction = 'noDirection';
+                direction = 'up';
+                break;
+            case 40:
+                direction = 'down';
+                break;
+            case 32:
+                if (snakeMove === 'notYet') {
+                    setTime(currentLevel, beginLevel, beginTime);
+                    snakeMove = setInterval(moveSnake, time);
+                }
+                start = true;
                 break;
             default:
-                direction = 'noDirection';
                 break;
         }
-        if (direction !== 'noDirection') {
-            console.log(direction);
-        }
-        if (direction === 'left' || direction === 'right') {
-            changeDirection(direction);
-            direction = 'noDirection';
-        }
-        else if (direction === 'fastRight' || direction === 'fastLeft') {
-            var dir = direction === 'fastRight' ? 'fastRight' : 'fastLeft';
-            moveTheCatcher(dir);
-        }
-        resetCanvas();
-        paintSquare(myFood);
-        paintSquare(myCatcher);
     });
 
-    //makes the catcher slide faster if the space bar is pressed
-    function moveTheCatcher(startingDir) {
-        //breaks out of multiple space bar hits
-        if (startingDir !== direction) {
-            return;
+    function moveSnake() {
+        if (direction === 'right') {
+            repositionSnake('x', 'plus');
+        }
+        else if (direction === 'left') {
+            repositionSnake('x', 'minus');
+        }
+        else if (direction === 'up') {
+            repositionSnake('y', 'minus');
         }
         else {
-            var myCatchX = myCatcher[0].x;
-            if (direction === 'noDirection' || (direction === 'fastLeft' && myCatchX === 0) || direction === 'right' || direction === 'left' || (direction === 'fastRight' && myCatchX === maxWidth)) {
-                return;
-            }
-            else if (direction === 'fastLeft'){
-                myCatcher.forEach(function(obj) {
-                    obj.x--;
-                })
-                resetCanvas();
-                paintSquare(myFood);
-                paintSquare(myCatcher);
-                setTimeout(moveTheCatcher, 50, startingDir);
+            repositionSnake('y', 'plus');
+        }
+        console.log(snake);
+        resetCanvas();
+        paintArray(snake);
+        paintArray(myFood);
+    }
+    function repositionSnake(xOrY, plusOrMinus) {
+        var snakeLength = snake.length;
+        for (var x=0; x < snakeLength; x++) {
+            console.log(snake);
+            plusOrMinus === 'plus' ? snake[x][xOrY]++ : snake[x][xOrY]--;
+        }
+        checkForOffBoard("snake");
+    }
+
+    function checkForOffBoard(arr) {
+        var snakeVar = window[arr];
+        var snakeLength = snakeVar.length;
+        for (var i=0 ; i < snakeLength; i++) {
+            var obj = snakeVar[i];
+            if (direction === 'right' || direction === 'left') {
+                if (obj.x < 0) {
+                    window[arr][i]["x"] = maxWidth;
+                }
+                else if (obj.x > maxWidth) {
+                    window[arr][i]["x"] = 0;
+                }
             }
             else {
-                myCatcher.forEach(function(obj) {
-                    obj.x++;
-                })
-                resetCanvas();
-                paintSquare(myFood);
-                paintSquare(myCatcher);
-                setTimeout(moveTheCatcher, 50, startingDir);
+                if (obj.y < 0) {
+                    window[arr][i]["y"] = maxWidth;
+                }
+                else if (obj.y > maxWidth) {
+                    window[arr][i]["y"] = 0;
+                }
             }
-            return;
         }
     }
 
@@ -193,35 +182,27 @@ $(document).ready(function() {
             }
         })
     }
+
+    //paints on the current score and the high score (is called each time the board is reset)
     function numberPaint() {
         var scoreText = "Score: " + score;
         ctx.fillStyle = 'Black';
         ctx.fillText(scoreText, 5, 15);
+
+        var high = "High Score: " + highScore;
+        ctx.fillStyle = 'Black';
+        ctx.fillText(high, 5, 25);
     }
-    //checks to see if there are a number of colors in a row
-    function inARow(num) {
-        var firstCol = false,
-            count =1,
-            arr = myCatcher;
-            last = myCatcher.length - 1;
-        for (var x = last; x > 0; x--) {
-            if (firstCol) {
-                if (arr[x].color === firstCol) {
-                    count++;
-                }
-                if (count === num) {
-                    arr.splice(x, num);
-                    paintSquare(myCatcher);
-                    score++;
-                    numberPaint();
-                    return;
-                }
-            }
-            else {
-                firstCol = arr[x].color;
-            }
+
+    //dynamically increases the time between levels
+    function setTime(level, beginLevel, beginTime) {
+        if (level === beginLevel) {
+            time = beginTime;
+            return;
         }
-        return;
+        else {
+            setTime(level, beginLevel + 1, beginTime/1.2);
+        }
     }
 
 
