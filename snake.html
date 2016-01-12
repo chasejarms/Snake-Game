@@ -2,13 +2,31 @@
 <html>
 <head>
 	<!-- Lets make a simple snake game -->
-	<canvas id="canvas" width="450" height="450"></canvas>
+	<link rel="stylesheet" type="text/css" href="bower_components/sweetalert/dist/sweetalert.css">
+	<link href='https://fonts.googleapis.com/css?family=Chonburi' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href="snake.css">
 
 </head>
 <body>
-
+	<h1 id="top">Snake Shell</h1>
+	<div id='go-left'>
+		<h2 id="instructions">Instructions</h2>
+		<!--movement-->
+		<p>Move the red snake using the directional pad and move the green snake using a,w,s, and d.</p>
+		<!--How to win-->
+		<p>You lose if you run into yourself or if you run into the other players skin.</p>
+		<!--How to shed skin-->
+		<p>After collecting food, shed your skin by pressing your corresponding direction button in the direction you're already going</p>
+	</div>
+	<div id='go-right'>
+		<div id="canvas-container">
+			<canvas id="canvas" width="450" height="450" style="border: 5px solid #548FBD"></canvas>
+		</div>
+	</div>
+	<div id='far-right'></div>
 </body>
 <!-- Jquery -->
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src='bower_components/sweetalert/dist/sweetalert.min.js' type="text/javascript"></script>
 <script src="snake.js" type="text/javascript"></script>
 </html>

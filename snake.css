@@ -1,0 +1,33 @@
+#canvas-container {
+    width: 100%;
+    text-align: left;
+}
+canvas {
+    display: inline;
+}
+html {
+    background-color: #0F63A4;
+    color: #548FBD;
+    font-family: "Chonburi", cursive;
+}
+#top {
+    text-align: center;
+    font-size: 57px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+#go-left {
+    float: left;
+    width: 30%;
+    font-size: 23px;
+    text-align: justify;
+}
+#go-right {
+    float: left;
+    width: 50%;
+    margin-left: 17px;
+}
+#instructions {
+    margin: 0;
+    border-bottom: 1px solid #548FBD;
+}
