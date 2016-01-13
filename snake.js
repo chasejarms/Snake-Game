@@ -19,7 +19,6 @@ var snake2 = [
     {x: 28, y: 29, color: "#05C12F"},
     {x: 29, y: 29, color: "#05C12F"}
 ];
-var paused = false;
 
 
 $(document).ready(function() {
@@ -69,7 +68,6 @@ $(document).ready(function() {
         paintArray(myFood);
         paintArray(snake);
         paintArray(snake2);
-        console.log("Game was reset");
     }
 
     function init() {
@@ -83,7 +81,6 @@ $(document).ready(function() {
         paintArray(myFood);
         paintArray(snake);
         paintArray(snake2);
-        console.log("It worked");
     }
 
     //sets up the canvas for the first time
@@ -132,11 +129,19 @@ $(document).ready(function() {
         ctx.fillRect(0, 0, w, h);
     }
 
+    function startGame(whichSnake) {
+        return function() {
+            whichSnake === 'snake' ? checkNull("direction2", "left") : checkNull("direction", "right");
+            snakeMove = setInterval(moveSnake, beginTime);
+            start = true;
+        }
+    }
+
+    startGameSnake = startGame("snake");
+    startGameSnake2 = startGame("snake2");
+
     //changes the global direction variable
     $(document).keydown(function(e) {
-        if (paused) {
-            return;
-        }
         prevDir = direction; //important for the snake slither motion
         prevDir2 = direction2;
         var key = e.which;
@@ -147,9 +152,7 @@ $(document).ready(function() {
                     shedSkin("snake");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction2", "left");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake();
                 }
                 break;
             case 39: //right arrow
@@ -158,9 +161,7 @@ $(document).ready(function() {
                     shedSkin("snake");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction2", "left");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake();
                 }
                 break;
             case 38: //up arrow
@@ -169,9 +170,7 @@ $(document).ready(function() {
                     shedSkin("snake");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction2", "left");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake();
                 }
                 break;
             case 40: //down arrow
@@ -180,9 +179,7 @@ $(document).ready(function() {
                     shedSkin("snake");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction2", "left");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake();
                 }
                 break;
             case 65: //character a (left for player two)
@@ -191,9 +188,7 @@ $(document).ready(function() {
                     shedSkin("snake2");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction", "right");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake2();
                 }
                 break;
             case 87: //character w (up for player two)
@@ -202,9 +197,7 @@ $(document).ready(function() {
                     shedSkin("snake2");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction", "right");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake2();
                 }
                 break;
             case 83: //character s (down for player two)
@@ -213,9 +206,7 @@ $(document).ready(function() {
                     shedSkin("snake2");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction", "right");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake2();
                 }
                 break;
             case 68: //character d (right for player two)
@@ -224,9 +215,7 @@ $(document).ready(function() {
                     shedSkin("snake2");
                 }
                 if (snakeMove === 'notYet') {
-                    checkNull("direction", "right");
-                    snakeMove = setInterval(moveSnake, beginTime);
-                    start = true;
+                    startGameSnake2();
                 }
             default:
                 break;
@@ -242,29 +231,29 @@ $(document).ready(function() {
     function moveSnake() {
         //makes snake slither
         if (direction === 'right') {
-            snakeSlither("snake", 'right');
+            snakeSlither('right');
         }
         else if (direction === 'left') {
-            snakeSlither("snake", 'left');
+            snakeSlither('left');
         }
         else if (direction === 'up') {
-            snakeSlither("snake", 'up');
+            snakeSlither('up');
         }
         else if (direction === 'down'){
-            snakeSlither("snake", 'down');
+            snakeSlither('down');
         }
         //makes snake2 slither
         if (direction2 === 'right') {
-            snakeSlither("snake2", 'right');
+            snake2Slither('right');
         }
         else if (direction2 === 'left') {
-            snakeSlither("snake2", 'left');
+            snake2Slither('left');
         }
         else if (direction2 === 'up') {
-            snakeSlither("snake2", 'up');
+            snake2Slither('up');
         }
         else if (direction2 === 'down') {
-            snakeSlither("snake2", 'down');
+            snake2Slither('down');
         }
         resetCanvas();
         paintArray(snakeSkin);
@@ -277,68 +266,37 @@ $(document).ready(function() {
     }
 
     //this function makes the snake-like movement to create the slither motion
-    function snakeSlither(whichSnake, dir) { //change some o this code to make it more dynamic for both snakes (end)
-        if (whichSnake === "snake") {
-            var firstPiece = snake[0];
-            var snakeLength = snake.length;
+    var snakeSlither = slither("snake");
+    var snake2Slither = slither("snake2");
+
+    function slither(whichSnake) { //change some o this code to make it more dynamic for both snakes (end)
+        return function (dir) {
+            var firstPiece = window[whichSnake][0];
             if (dir === 'right') {
-                snake.unshift({x: firstPiece.x + 1, y: firstPiece.y, color: firstPiece["color"]});
-                snake.pop();
+                window[whichSnake].unshift({x: firstPiece.x + 1, y: firstPiece.y, color: firstPiece["color"]});
+                window[whichSnake].pop();
             }
             else if (dir === 'left') {
-                snake.unshift({x: firstPiece.x - 1, y: firstPiece.y, color: firstPiece["color"]});
-                snake.pop();
+                window[whichSnake].unshift({x: firstPiece.x - 1, y: firstPiece.y, color: firstPiece["color"]});
+                window[whichSnake].pop();
             }
             else if (dir === 'up') {
-                snake.unshift({x: firstPiece.x, y: firstPiece.y - 1, color: firstPiece["color"]});
-                snake.pop();
+                window[whichSnake].unshift({x: firstPiece.x, y: firstPiece.y - 1, color: firstPiece["color"]});
+                window[whichSnake].pop();
             }
             else {
-                snake.unshift({x: firstPiece.x, y: firstPiece.y + 1, color: firstPiece["color"]});
-                snake.pop();
+                window[whichSnake].unshift({x: firstPiece.x, y: firstPiece.y + 1, color: firstPiece["color"]});
+                window[whichSnake].pop();
             }
 
             //puts the right color after the base snake
-            if (snake.length > 3) {
-                snake[3]["color"] = "#F6071E";
+            if (window[whichSnake].length > 3) {
+                window[whichSnake][3]["color"] = whichSnake === 'snake' ? "#F6071E" : "#05C12F";
             }
-            checkForOffBoard("snake");
-            eatFood(direction, "snake");
-            crashCheck("snake");
+            checkForOffBoard(whichSnake);
+            eatFood(direction, whichSnake);
+            whichSnake === 'snake' ? checkSnakeCrash() : checkSnake2Crash();
         }
-        else if (whichSnake === 'snake2') {
-            var firstPiece = snake2[0];
-            if (dir === 'right') {
-                snake2.unshift({x: firstPiece.x + 1, y: firstPiece.y, color: firstPiece["color"]});
-                snake2.pop();
-            }
-            else if (dir === 'left') {
-                snake2.unshift({x: firstPiece.x - 1, y: firstPiece.y, color: firstPiece["color"]});
-                snake2.pop();
-            }
-            else if (dir === 'up') {
-                snake2.unshift({x: firstPiece.x, y: firstPiece.y - 1, color: firstPiece["color"]});
-                snake2.pop();
-            }
-            else {
-                snake2.unshift({x: firstPiece.x, y: firstPiece.y + 1, color: firstPiece["color"]});
-                snake2.pop();
-            }
-
-            //puts the right color after the base snake
-            if (snake2.length > 3) {
-                snake2[3]["color"] = "#05C12F";
-            }
-            checkForOffBoard("snake2");
-            eatFood(direction, "snake2");
-            crashCheck("snake2");
-        }
-        resetCanvas();
-        paintArray(snakeSkin);
-        paintArray(snake2Skin);
-        paintArray(snake2);
-        paintArray(snake);
-        paintArray(myFood);
     }
 
     function eatFood(dir, whichSnake) {
@@ -391,18 +349,20 @@ $(document).ready(function() {
 
     //can't crash into itself with this function
     function crashCheck(whichSnake) {
-        var snakeLength = whichSnake === 'snake' ? snake.length : snake2.length;
-        var head = window[whichSnake][0];
-        var same = 0;
-        for (var i = 0; i < snakeLength; i++) {
-            if (head.x === window[whichSnake][i].x && head.y === window[whichSnake][i].y) {
-                same++;
+        return function () {
+            var snakeLength = whichSnake === 'snake' ? snake.length : snake2.length;
+            var snakeHead = window[whichSnake][0];
+            var currentSnake = window[whichSnake].filter(function(snakeBlock) {
+                return snakeBlock.x === snakeHead.x && snakeBlock.y === snakeHead.y;
+            })
+            if (currentSnake.length === 1) {
+                return;
             }
-            if (same > 1 && i !== snakeLength - 1) {
+            else {
                 if (whichSnake === 'snake') {
                     swal({
                         title: "Green snake wins!",
-                        text: "Green snake crashed into itself.",
+                        text: "Red snake crashed into itself.",
                         type: "success",
                         showConfirmButton: true,
                         showCancelButton: false,
@@ -413,7 +373,7 @@ $(document).ready(function() {
                                 resetGame();
                             }
                         }
-                     )
+                    )
                 }
                 else {
                     swal({
@@ -429,44 +389,161 @@ $(document).ready(function() {
                                 resetGame();
                             }
                         }
-                     )
+                    )
                 }
             }
         }
     }
 
+    var checkSnakeCrash = crashCheck("snake");
+    var checkSnake2Crash = crashCheck("snake2");
     function shedSkin(whichSnake) {
         var shedded = window[whichSnake].pop();
         window[whichSnake + "Skin"].push(shedded);
         paintArray(window[whichSnake]);
-    }
+    };
     function hitSkin(whichSnake) {
         var player = whichSnake === 'snake' ? 'Green snake' : 'Red Snake';
         var player2 = whichSnake === 'snake' ? 'Red Snake' : 'Green snake';
         var skin = whichSnake === "snake" ? window["snake2Skin"] : window["snakeSkin"];
-        var snake = window[whichSnake];
+        var thisSnake = window[whichSnake];
         var snakeLength = snake.length;
         var skinLength = skin.length;
-        for (var i = 0; i < skinLength; i++) {
-            if (snake[0].x === skin[i].x && snake[0].y === skin[i].y) {
-                swal({
-                    title: player + " wins!",
-                    text: player2 + " crashed into your skin.",
-                    type: "success",
-                    showConfirmButton: true,
-                    showCancelButton: false,
-                    closeOnConfirm: true,
-                    confirmButtonText: "Play Again"},
-                    function(isConfirm) {
-                        if (isConfirm) {
-                            resetGame();
-                        }
+        var hit = skin.filter(function(obj) {
+            return obj.x === thisSnake[0].x && obj.y === thisSnake[0].y;
+        })
+        if (hit.length > 0) {
+            swal({
+                title: player + " wins!",
+                text: player2 + " crashed into your skin.",
+                type: "success",
+                showConfirmButton: true,
+                showCancelButton: false,
+                closeOnConfirm: true,
+                confirmButtonText: "Play Again"},
+                function(isConfirm) {
+                    if (isConfirm) {
+                        resetGame();
                     }
-                 )
-            }
+                }
+            )
         }
     }
 
 
 
 })
+
+//everything below this lines is common higher order functions I couldn't find a good way to implement in my code but that I do understand
+
+var family = [
+    {name: "John", age: 49, relationship: "father", status: "married"},
+    {name: "Jacque", age: 45, relationship: "mother", status: "married"},
+    {name: "Courtnee", age: 23, relationship: "sister", status: "single"},
+    {name: "Lyndsee", age: 21, relationship: "sister", status: "single"},
+    {name: "Nick", age: 18, relationship: "brother", status: "single"},
+    {name: "Mitch", age: 14, relationship: "brother", status: "single"}
+];
+
+//the map higher order function
+
+    var familyName = family.map(function(person) {
+        return person.name;
+    })
+
+    //familyName = [{"John", "Jacque", "Courtnee", "Lyndsee", "Nick", "Mitch"}]
+
+    //or it can be done this way
+
+    var justRel = function(person) {
+        return person.relationship;
+    }
+    var Rels = family.map(justRel);
+
+    //Rels = [{"father", "mother", "sister", "sister", "brother", "brother"}]
+
+//the reduce higher order function
+
+    var cumulativeAge = family.reduce(function(sum, person) {
+        return sum + person.age;
+    }, 0);
+
+    //cumulativeAge = 170;
+
+    var wed = function(person) {
+        return person.status === "married";
+    }
+
+    var single = function(person) {
+        return person.status === "single";
+    }
+
+    var marriedPeople = family.filter(wed).reduce(function(startingPhrase, person) {
+        return startingPhrase + person.name + "\n";
+    }, "Married people list: \n\n");
+
+    //marriedPeople = ["Married people list: \n\nJohn\nJacque\n"]
+
+    var singlePeople = family.filter(single).reduce(function(startingPhrase, person) {
+        return startingPhrase + person.name + "\n";
+    }, "Single people list: \n\n");
+
+    //singlePeople = ["Single people list: \n\nCourtnee\nLyndsee\nNick\nMitch\n"]
+
+
+//Below is a higher order function I created for a Risk Board type project. My buddies and I enjoy a good game of Risk every now and again but it becomes monotonous when you have a very large battle between two players.  I made the following higher order function to do a random dice roll three times for the offense and 2 times for the defense. The actual program makes large battles instantaneous (practically) but this small snippet demonstrates building higher order functions:
+
+    var offStart = 20;
+    var defStart = 15;
+    var offDice = [];
+    var defDice = [];
+
+    function callTimes(times) {
+        return function(action, para) {
+            for (var x = 0; x < times; x++) {
+                var on = typeof(para) === "function" ? para() : para;
+                action(on);
+            }
+            return;
+        }
+    }
+
+    var callThreeTimes = callTimes(3);
+    var callTwoTimes = callTimes(2);
+    var callOnce = callTimes(1);
+
+    function pushTo(arr) {
+        return function(whatToPush) {
+            arr.push(whatToPush);
+        }
+    }
+    var pushToOffDice = pushTo(offDice);
+    var pushToDefDice = pushTo(defDice);
+
+    function randomNumber() {
+            return Math.ceil(Math.random() * 6);
+    }
+
+    function randomRolls(offNum, defNum) {
+        //put three random numbers between one and zero in the offDice Array
+        if (offNum > 3) {
+            callThreeTimes(pushToOffDice, randomNumber);
+        }
+        else if (offNum > 2) {
+            callTwoTimes(pushToOffDice, randomNumber);
+        }
+        else if (offNum > 1) {
+            callOneTime(pushToOffDice, randomNumber);
+        }
+        //puts two random numbers between one and six in the defDice Array
+        if (defNum > 1) {
+            callTwoTimes(pushToDefDice, randomNumber);
+        }
+        else if (defNum > 0) {
+            callOneTime(pushToDefDice, randomNumber);
+        }
+    }
+
+    randomRolls(offStart, defStart);
+
+    //will put three random numbers inside the offDice Array and two random numbers inside the defDice Array
